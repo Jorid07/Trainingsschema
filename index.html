@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <title>Trainingsplanner</title>
+
+  <!-- PWA manifest -->
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#0F6E56">
+
+  <!-- iOS PWA support -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Training">
+  <link rel="apple-touch-icon" href="./apple-touch-icon.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png">
+  <link rel="icon" type="image/svg+xml" href="./icon.svg">
+
+  <!-- Tabler Icons webfont -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css">
+
+  <style>
+    /* =============================================================
+       DESIGN TOKENS - kleurthema gebaseerd op Anthropic-stijl
+       ============================================================= */
+    :root {
+      --color-background-primary: #FFFFFF;
+      --color-background-secondary: #F5F4ED;
+      --color-background-tertiary: #ECEAE0;
+      --color-background-info: #E6F1FB;
+      --color-background-success: #E1F5EE;
+      --color-background-warning: #FAEEDA;
+      --color-background-danger: #FCEBEB;
+
+      --color-text-primary: #1F1E1B;
+      --color-text-secondary: #5F5E5A;
+      --color-text-tertiary: #888780;
+      --color-text-info: #185FA5;
+      --color-text-success: #0F6E56;
+      --color-text-warning: #854F0B;
+      --color-text-danger: #A32D2D;
+
+      --color-border-tertiary: rgba(0, 0, 0, 0.10);
+      --color-border-secondary: rgba(0, 0, 0, 0.18);
+      --color-border-primary: rgba(0, 0, 0, 0.30);
+      --color-border-info: #378ADD;
+
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      --font-serif: ui-serif, Georgia, serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+      --border-radius-md: 8px;
+      --border-radius-lg: 12px;
+      --border-radius-xl: 16px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --color-background-primary: #1F1E1B;
+        --color-background-secondary: #2B2A26;
+        --color-background-tertiary: #3A3935;
+        --color-background-info: #0C447C;
+        --color-background-success: #085041;
+        --color-background-warning: #633806;
+        --color-background-danger: #791F1F;
+
+        --color-text-primary: #F5F4ED;
+        --color-text-secondary: #B4B2A9;
+        --color-text-tertiary: #888780;
+        --color-text-info: #85B7EB;
+        --color-text-success: #5DCAA5;
+        --color-text-warning: #FAC775;
+        --color-text-danger: #F09595;
+
+        --color-border-tertiary: rgba(255, 255, 255, 0.10);
+        --color-border-secondary: rgba(255, 255, 255, 0.18);
+        --color-border-primary: rgba(255, 255, 255, 0.30);
+      }
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--color-background-tertiary);
+      color: var(--color-text-primary);
+      font-family: var(--font-sans);
+      font-size: 16px;
+      line-height: 1.5;
+      -webkit-text-size-adjust: 100%;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      min-height: 100vh;
+      min-height: -webkit-fill-available;
+      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    }
+
+    #root {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 0 16px 32px;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      color: var(--color-text-primary);
+      font-weight: 500;
+      margin: 0;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    /* Header banner */
+    .app-header {
+      background: var(--color-text-success);
+      color: white;
+      padding: 14px 20px;
+      margin: 0 -16px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .app-header-title {
+      font-size: 17px;
+      font-weight: 500;
+    }
+    .app-header-subtitle {
+      font-size: 12px;
+      opacity: 0.85;
+    }
+
+    /* Inputs */
+    input[type="text"], input[type="number"], input[type="date"], select, textarea {
+      font-family: var(--font-sans);
+      font-size: 14px;
+      padding: 8px 12px;
+      border: 0.5px solid var(--color-border-tertiary);
+      border-radius: var(--border-radius-md);
+      background: var(--color-background-primary);
+      color: var(--color-text-primary);
+      height: 36px;
+      transition: border-color 0.15s;
+      width: 100%;
+    }
+    textarea {
+      height: auto;
+      min-height: 60px;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--color-border-info);
+      box-shadow: 0 0 0 2px rgba(55, 138, 221, 0.15);
+    }
+
+    /* Range slider */
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 4px;
+      background: var(--color-background-tertiary);
+      border-radius: 2px;
+      outline: none;
+      padding: 0;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--color-text-success);
+      cursor: pointer;
+      border: none;
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--color-text-success);
+      cursor: pointer;
+      border: none;
+    }
+
+    /* Buttons */
+    button {
+      font-family: var(--font-sans);
+      font-size: 13px;
+      padding: 8px 14px;
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: var(--border-radius-md);
+      background: transparent;
+      color: var(--color-text-primary);
+      cursor: pointer;
+      transition: all 0.15s;
+      min-height: 36px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+    button:hover:not(:disabled) {
+      background: var(--color-background-secondary);
+    }
+    button:active:not(:disabled) {
+      transform: scale(0.98);
+    }
+    button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* Details/Summary */
+    details summary {
+      list-style: none;
+      cursor: pointer;
+    }
+    details summary::-webkit-details-marker { display: none; }
+    details summary::marker { display: none; }
+
+    /* Loading splash */
+    .loading-splash {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--color-background-tertiary);
+      color: var(--color-text-secondary);
+      gap: 16px;
+      z-index: 100;
+    }
+    .loading-splash.hidden {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    .splash-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 14px;
+      background: var(--color-text-success);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 32px;
+    }
+
+    /* Install banner */
+    .install-banner {
+      position: fixed;
+      bottom: env(safe-area-inset-bottom, 0);
+      left: 16px;
+      right: 16px;
+      max-width: 688px;
+      margin: 0 auto 12px;
+      background: var(--color-text-primary);
+      color: var(--color-background-primary);
+      padding: 12px 16px;
+      border-radius: var(--border-radius-lg);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+      z-index: 50;
+    }
+    .install-banner-close {
+      background: transparent;
+      border: none;
+      color: inherit;
+      opacity: 0.6;
+      cursor: pointer;
+      padding: 4px;
+      min-height: auto;
+    }
+    .install-banner-action {
+      background: var(--color-text-success);
+      border: none;
+      color: white;
+      padding: 6px 12px;
+      border-radius: var(--border-radius-md);
+      font-weight: 500;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div id="root">
+    <div class="loading-splash" id="splash">
+      <div class="splash-icon"><i class="ti ti-mountain"></i></div>
+      <div>Laden...</div>
+    </div>
+  </div>
+
+  <!-- React via CDN -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+  <!-- App-script (pre-compiled) -->
+  <script src="./app.js"></script>
+
+  <!-- Service worker -->
+  <script>
+    // Hide splash
+    document.addEventListener("DOMContentLoaded", () => {
+      setTimeout(() => {
+        const s = document.getElementById("splash");
+        if (s) s.classList.add("hidden");
+      }, 100);
+    });
+
+    // Register service worker
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js").catch((err) => {
+          console.log("SW registration failed:", err);
+        });
+      });
+    }
+
+    // PWA install prompt (Android/Chrome)
+    let deferredInstallPrompt = null;
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      deferredInstallPrompt = e;
+      showInstallBanner();
+    });
+
+    function showInstallBanner() {
+      if (localStorage.getItem("installBannerDismissed") === "1") return;
+      if (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) return;
+
+      const banner = document.createElement("div");
+      banner.className = "install-banner";
+      banner.innerHTML = `
+        <i class="ti ti-download" style="font-size:20px"></i>
+        <div style="flex:1">App installeren voor snellere toegang en offline gebruik.</div>
+        <button class="install-banner-action" id="installBtn">Installeer</button>
+        <button class="install-banner-close" id="installClose" aria-label="Sluit"><i class="ti ti-x" style="font-size:18px"></i></button>
+      `;
+      document.body.appendChild(banner);
+
+      document.getElementById("installBtn").addEventListener("click", async () => {
+        if (deferredInstallPrompt) {
+          deferredInstallPrompt.prompt();
+          const { outcome } = await deferredInstallPrompt.userChoice;
+          if (outcome === "accepted") {
+            banner.remove();
+          }
+          deferredInstallPrompt = null;
+        }
+      });
+      document.getElementById("installClose").addEventListener("click", () => {
+        localStorage.setItem("installBannerDismissed", "1");
+        banner.remove();
+      });
+    }
+
+    // iOS: detecteer Safari, toon eenmalig instructie als de gebruiker niet als PWA draait
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const isStandalone = window.navigator.standalone === true;
+    if (isIOS && !isStandalone && !localStorage.getItem("iosInstallShown")) {
+      window.addEventListener("load", () => {
+        setTimeout(() => {
+          const banner = document.createElement("div");
+          banner.className = "install-banner";
+          banner.innerHTML = `
+            <i class="ti ti-device-mobile" style="font-size:20px"></i>
+            <div style="flex:1; font-size:12px; line-height:1.4">
+              Tip: tik op <i class="ti ti-share" style="font-size:14px"></i> en kies "Zet op beginscherm" om als app te gebruiken.
+            </div>
+            <button class="install-banner-close" id="iosClose" aria-label="Sluit"><i class="ti ti-x" style="font-size:18px"></i></button>
+          `;
+          document.body.appendChild(banner);
+          document.getElementById("iosClose").addEventListener("click", () => {
+            localStorage.setItem("iosInstallShown", "1");
+            banner.remove();
+          });
+        }, 2000);
+      });
+    }
+  </script>
+</body>
+</html>

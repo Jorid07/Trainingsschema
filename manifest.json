@@ -1,0 +1,26 @@
+{
+  "name": "Trainingsplanner",
+  "short_name": "Training",
+  "description": "Hardloop- en trailrun trainingsplanner met logboek",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FAF9F5",
+  "theme_color": "#0F6E56",
+  "lang": "nl",
+  "icons": [
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
